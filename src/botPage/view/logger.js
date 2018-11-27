@@ -1,5 +1,5 @@
-import { observer as globalObserver } from 'binary-common-utils/lib/observer';
-import { getToken } from 'binary-common-utils/lib/storageManager';
+import { observer as globalObserver } from '../../common/utils/observer';
+import { getToken } from '../../common/utils/storageManager';
 import { translate } from '../../common/i18n';
 import { isVirtual } from '../common/tools';
 
@@ -10,7 +10,9 @@ const log = (type, ...args) => {
         console.log(...args); // eslint-disable-line no-console
     }
     const date = new Date();
-    const timestamp = `${date.toISOString().split('T')[0]} ${date.toTimeString().slice(0, 8)}`;
+    const timestamp = `${date.toISOString().split('T')[0]} ${date.toTimeString().slice(0, 8)} ${
+        date.toTimeString().split(' ')[1]
+    }`;
     globalObserver.emit('bot.notify', { type, timestamp, message: args.join(':') });
 };
 

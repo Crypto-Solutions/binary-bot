@@ -30,7 +30,7 @@ class SaveContent extends PureComponent {
             >
                 <div>
                     <div style={style.inputRow}>
-                        <label style={style.field} title={'Choose a filename to save'} htmlFor="save-filename">
+                        <label title={'Choose a filename to save'} htmlFor="save-filename">
                             {translate('Filename')}:
                             <input
                                 style={style.filename}
@@ -45,25 +45,25 @@ class SaveContent extends PureComponent {
                         </label>
                     </div>
                     <div style={style.inputRow}>
+                        <input
+                            title={translate(
+                                'Save your blocks individually in a collection. They will be added to your existing workspace (main blocks will be replaced) when loaded.'
+                            )}
+                            name="save-is-collection"
+                            id="save-is-collection"
+                            type="checkbox"
+                            ref={el => {
+                                this.isCollection = el;
+                            }}
+                            style={style.checkbox}
+                        />
                         <label
-                            style={style.field}
                             title={
                                 'Save your blocks individually in a collection. They will be added to your existing workspace (main blocks will be replaced) when loaded.'
                             }
                             htmlFor="save-is-collection"
                         >
                             {translate('Save As Collection')}
-                            <input
-                                title={translate(
-                                    'Save your blocks individually in a collection. They will be added to your existing workspace (main blocks will be replaced) when loaded.'
-                                )}
-                                name="save-is-collection"
-                                type="checkbox"
-                                ref={el => {
-                                    this.isCollection = el;
-                                }}
-                                style={style.checkbox}
-                            />
                         </label>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ export default class Save extends Dialog {
             this.limitsPromise(arg);
             this.close();
         };
-        super('save-dialog', translate('Save blocks as'), <SaveContent onSave={onSave} />);
+        super('save-dialog', translate('Save blocks as'), <SaveContent onSave={onSave} />, style.dialogLayout);
     }
     save() {
         this.open();

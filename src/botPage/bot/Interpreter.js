@@ -1,5 +1,5 @@
 import JSInterpreter from 'js-interpreter';
-import { observer as globalObserver } from 'binary-common-utils/lib/observer';
+import { observer as globalObserver } from '../../common/utils/observer';
 import { createScope } from './CliTools';
 import Interface from './Interface';
 
@@ -92,13 +92,14 @@ export default class Interpreter {
                 if (this.stopped) {
                     return;
                 }
+                this.isErrorTriggered = true;
                 if (!shouldRestartOnError(this.bot, e.name) || !botStarted(this.bot)) {
                     reject(e);
                     return;
                 }
                 globalObserver.emit('Error', e);
                 const { initArgs, tradeOptions } = this.bot.tradeEngine;
-                this.stop();
+                this.terminateSession();
                 this.init();
                 this.$scope.observer.register('Error', onError);
                 this.bot.tradeEngine.init(...initArgs);
@@ -116,6 +117,7 @@ export default class Interpreter {
     }
     loop() {
         if (this.stopped || !this.interpreter.run()) {
+            this.isErrorTriggered = false;
             this.onFinish(this.interpreter.pseudoToNative(this.interpreter.value));
         }
     }
@@ -125,10 +127,22 @@ export default class Interpreter {
         this.interpreter.paused_ = false;
         this.loop();
     }
-    stop() {
+    terminateSession() {
         this.$scope.api.disconnect();
         globalObserver.emit('bot.stop');
         this.stopped = true;
+    }
+    stop() {
+        if (this.bot.tradeEngine.isSold === false && !this.isErrorTriggered) {
+            globalObserver.register('contract.status', contractStatus => {
+                if (contractStatus.id === 'contract.sold') {
+                    this.terminateSession();
+                    globalObserver.unregisterAll('contract.status');
+                }
+            });
+        } else {
+            this.terminateSession();
+        }
     }
     createAsync(interpreter, func) {
         return interpreter.createAsyncFunction((...args) => {

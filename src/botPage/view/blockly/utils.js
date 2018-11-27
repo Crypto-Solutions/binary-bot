@@ -1,4 +1,4 @@
-import { observer as globalObserver } from 'binary-common-utils/lib/observer';
+import { observer as globalObserver } from '../../../common/utils/observer';
 import config from '../../common/const';
 import { translate } from '../../../common/i18n';
 import { saveAs } from '../shared';
@@ -226,8 +226,15 @@ export const deleteBlocksLoadedBy = (id, eventGroup = true) => {
     });
     Blockly.Events.setGroup(false);
 };
-
+export const fixArgumentAttribute = xml => {
+    Array.from(xml.getElementsByTagName('arg')).forEach(o => {
+        if (o.hasAttribute('varid')) o.setAttribute('varId', o.getAttribute('varid'));
+    });
+};
 export const addDomAsBlock = blockXml => {
+    if (blockXml.tagName === 'variables') {
+        return Blockly.Xml.domToVariables(blockXml, Blockly.mainWorkspace);
+    }
     backwardCompatibility(blockXml);
     const blockType = blockXml.getAttribute('type');
     if (isMainBlock(blockType)) {
@@ -236,10 +243,13 @@ export const addDomAsBlock = blockXml => {
             .filter(b => b.type === blockType)
             .forEach(b => b.dispose());
     }
+    if (isProcedure(blockType)) {
+        fixArgumentAttribute(blockXml);
+    }
     return Blockly.Xml.domToBlock(blockXml, Blockly.mainWorkspace);
 };
 
-const replaceDeletedBlock = block => {
+/* const replaceDeletedBlock = block => {
     const procedureName = block.getFieldValue('NAME');
     const oldProcedure = Blockly.Procedures.getDefinition(`${procedureName} (deleted)`, Blockly.mainWorkspace);
     if (oldProcedure) {
@@ -252,7 +262,7 @@ const replaceDeletedBlock = block => {
         block.setFieldValue(`${procedureName}`, 'NAME');
         Blockly.Events.recordUndo = recordUndo;
     }
-};
+}; */
 
 export const recoverDeletedBlock = block => {
     const { recordUndo } = Blockly.Events;
@@ -262,10 +272,10 @@ export const recoverDeletedBlock = block => {
     Blockly.Events.recordUndo = recordUndo;
 };
 
-const addDomAsBlockFromHeader = (blockXml, header = null) => {
-    const oldVars = [...Blockly.mainWorkspace.variableList];
+const addDomAsBlockFromHeader = (blockXml /* , header = null */) => {
+    // const oldVars = [...Blockly.mainWorkspace.variableList];
     const block = Blockly.Xml.domToBlock(blockXml, Blockly.mainWorkspace);
-    Blockly.mainWorkspace.variableList = Blockly.mainWorkspace.variableList.filter(v => {
+    /* Blockly.mainWorkspace.variableList = Blockly.mainWorkspace.variableList.filter(v => {
         if (oldVars.indexOf(v) >= 0) {
             return true;
         }
@@ -273,7 +283,7 @@ const addDomAsBlockFromHeader = (blockXml, header = null) => {
         return false;
     });
     replaceDeletedBlock(block);
-    Blockly.Events.fire(new Hide(block, header));
+    Blockly.Events.fire(new Hide(block, header)); */
     return block;
 };
 
